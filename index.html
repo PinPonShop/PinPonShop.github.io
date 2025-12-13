@@ -109,14 +109,15 @@
         .btn { width: 100%; padding: 14px; border: none; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer; text-align: center; margin-bottom: 10px; }
         .btn-primary { background: var(--primary); color: white; }
         .btn-danger { background: #ff4444; color: white; }
-        .btn-success { background: #00a65a; color: white; }
+        .btn-success { background: var(--success); color: white; }
         .btn-info { background: #3498db; color: white; }
+        .btn-secondary { background: var(--secondary); color: white; }
 
         /* --- ADMIN OVERLAY --- */
         #maintenance-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: #fff; z-index: 9999; display: none; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 40px; }
         .admin-controls-panel { background: #f0f0f0; padding: 15px; border-radius: 8px; margin-bottom: 10px; }
 
-        /* --- NUEVO: ESTILOS PARA CHECKBOX BONITOS --- */
+        /* --- ESTILOS DE CHECKBOX BONITOS (PREVIOS) --- */
         .checkbox-container {
             display: flex;
             align-items: center;
@@ -158,7 +159,115 @@
             background: var(--success);
             border-color: var(--success);
         }
+        
+        /* --- ESTILOS DE LA MODAL DE PRODUCTO (NUEVOS/AJUSTADOS) --- */
+        #product-modal .modal-content {
+            padding: 0; 
+        }
 
+        #modal-img-container {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            background: #f9f9f9;
+            position: relative;
+            overflow: hidden;
+            border-radius: 16px 16px 0 0;
+            margin-bottom: 15px;
+        }
+        #modal-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .modal-details-area {
+            padding: 0 20px 20px 20px; 
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+
+        .detail-price-row { 
+            display: flex; 
+            align-items: baseline; 
+            gap: 10px; 
+            margin: 10px 0 15px; 
+            flex-wrap: wrap;
+        }
+        .detail-price { 
+            font-size: 1.6rem; 
+            font-weight: 800; 
+            color: var(--primary); 
+        }
+        .detail-mn { 
+            font-size: 0.9rem; 
+            font-weight: 600; 
+            color: var(--secondary); 
+        }
+        .detail-old-price { 
+            font-size: 1rem; 
+            text-decoration: line-through; 
+            color: #999; 
+        }
+
+        .detail-actions { 
+            margin-top: 20px; 
+            display: flex; 
+            gap: 10px; 
+            align-items: center;
+        }
+        .qty-selector-large {
+            display: flex; 
+            align-items: center; 
+            border: 1px solid #ddd; 
+            border-radius: 30px; 
+            overflow: hidden; 
+            background: #fff;
+            flex-shrink: 0;
+        }
+        .qty-btn-large { 
+            width: 35px; 
+            height: 35px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            background: none; 
+            border: none; 
+            font-size: 1.2rem; 
+            color: #333; 
+            cursor: pointer; 
+        }
+        .qty-display-large { 
+            font-size: 1.1rem; 
+            font-weight: 700; 
+            min-width: 30px; 
+            text-align: center; 
+        }
+        .btn-add-large { 
+            flex-grow: 1; 
+            padding: 10px 15px; 
+            border: none; 
+            border-radius: 30px; 
+            font-size: 1rem; 
+            font-weight: bold; 
+            cursor: pointer; 
+            background: var(--secondary); 
+            color: white; 
+        }
+        
+        .rating-interactive i {
+            font-size: 1.5rem;
+            color: var(--gold);
+            margin-right: 5px;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+        .rating-label {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 10px;
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -252,44 +361,55 @@
 
     <div class="modal" id="product-modal">
         <div class="modal-content">
-            <button class="close-modal" style="position: absolute; right: 15px; top: 15px; z-index: 10;" onclick="closeModal('product-modal')">&times;</button>
-            <img id="modal-img" class="img-large" src="" alt="" style="width:100%; height:300px; object-fit:contain;">
-            <h2 id="modal-title" style="margin: 10px 0 0 0; font-size: 1.3rem;"></h2>
+            <button class="close-modal" style="position: absolute; right: 15px; top: 15px; z-index: 10; background: rgba(255,255,255,0.7); border-radius: 50%;" onclick="closeModal('product-modal')">&times;</button>
             
-            <label class="rating-label">Clasifique nuestro producto:</label>
-            <div class="rating-interactive" id="modal-rating-container">
-                <i class="far fa-star" onclick="rateProduct(1)"></i>
-                <i class="far fa-star" onclick="rateProduct(2)"></i>
-                <i class="far fa-star" onclick="rateProduct(3)"></i>
-                <i class="far fa-star" onclick="rateProduct(4)"></i>
-                <i class="far fa-star" onclick="rateProduct(5)"></i>
+            <div id="modal-img-container">
+                <img id="modal-img" src="" alt="Producto en Modal" loading="lazy">
+                <div class="out-of-stock-overlay" id="modal-stock-overlay" style="display:none;">AGOTADO</div>
             </div>
 
-            <p id="modal-desc" style="color: #666; line-height: 1.5; font-size: 0.95rem;"></p>
-            <div style="display: flex; align-items: baseline;">
-                <span class="detail-price" id="modal-price"></span>
-                <span class="detail-mn" id="modal-mn-price"></span>
-            </div>
-
-            <div class="detail-actions">
-                <div class="qty-selector-large">
-                    <button class="qty-btn-large" onclick="updateModalQty(-1)">-</button>
-                    <div class="qty-display-large" id="modal-qty-display">1</div>
-                    <button class="qty-btn-large" onclick="updateModalQty(1)">+</button>
+            <div class="modal-details-area">
+                <h2 id="modal-title" style="margin: 0 0 5px 0; font-size: 1.3rem;"></h2>
+                
+                <div class="detail-price-row">
+                    <span class="detail-price" id="modal-price"></span>
+                    <span class="detail-mn" id="modal-mn-price"></span>
+                    <span class="detail-old-price" id="modal-old-price"></span>
                 </div>
-                <button class="btn-add-large" id="modal-add-btn" onclick="addToCartFromModal()">Agregar al Carrito</button>
-            </div>
+
+                <label class="rating-label">Clasifique nuestro producto:</label>
+                <div class="rating-interactive" id="modal-rating-container">
+                    <i class="far fa-star" onclick="rateProduct(1)"></i>
+                    <i class="far fa-star" onclick="rateProduct(2)"></i>
+                    <i class="far fa-star" onclick="rateProduct(3)"></i>
+                    <i class="far fa-star" onclick="rateProduct(4)"></i>
+                    <i class="far fa-star" onclick="rateProduct(5)"></i>
+                </div>
+                
+                <p id="modal-desc" style="color: #666; line-height: 1.5; font-size: 0.95rem; margin-top: 15px;"></p>
+
+                <div class="detail-actions" id="modal-action-controls">
+                    <div class="qty-selector-large">
+                        <button class="qty-btn-large" onclick="updateModalQty(-1)">-</button>
+                        <div class="qty-display-large" id="modal-qty-display">1</div>
+                        <button class="qty-btn-large" onclick="updateModalQty(1)">+</button>
+                    </div>
+                    <button class="btn-add-large" id="modal-add-btn" onclick="addToCartFromModal()">Agregar al Carrito</button>
+                </div>
+                <div id="modal-out-of-stock-message" style="display:none; text-align:center; padding:15px; background:#ffebeb; color:#E60023; border-radius:8px; margin-top:20px; font-weight:bold;">
+                    ¡Producto temporalmente agotado!
+                </div>
             
-            <div id="admin-product-actions" style="display:none; margin-top: 15px; border-top: 1px dashed #ccc; padding-top: 15px;">
-                <p style="font-size: 0.8rem; font-weight: bold; color: var(--secondary);">OPCIONES ADMIN:</p>
-                <div style="display:flex; gap: 10px;">
-                    <button class="btn btn-info" onclick="editProductFromModal()">Editar</button>
-                    <button class="btn btn-danger" onclick="deleteProductFromModal()">Eliminar</button>
+                <div id="admin-product-actions" style="display:none; margin-top: 25px; border-top: 1px dashed #ccc; padding-top: 15px;">
+                    <p style="font-size: 0.8rem; font-weight: bold; color: var(--primary);">OPCIONES ADMIN:</p>
+                    <div style="display:flex; gap: 10px;">
+                        <button class="btn btn-info" style="flex:1;" onclick="editProductFromModal()"><i class="fas fa-edit"></i> Editar</button>
+                        <button class="btn btn-danger" style="flex:1;" onclick="deleteProductFromModal()"><i class="fas fa-trash-alt"></i> Eliminar</button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-
     <div class="modal" id="cart-modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -316,19 +436,20 @@
             <form id="checkout-form" onsubmit="processOrder(event)">
                 <label style="font-size:0.9rem; font-weight:bold;">Datos de Envío</label>
                 <input type="text" id="c-name" placeholder="Nombre y Apellidos" required>
-                <input type="text" id="c-ci" placeholder="Carnet de Identidad" required>
+                <input type="text" id="c-ci" placeholder="Carnet de Identidad (Opcional)" value="N/A">
                 <input type="text" id="c-address" placeholder="Dirección Exacta" required>
                 <input type="tel" id="c-phone" placeholder="Teléfono / WhatsApp" required>
                 
-                <label style="font-size:0.9rem; font-weight:bold;">Fecha de Entrega</label>
+                <label style="font-size:0.9rem; font-weight:bold;">Fecha de Entrega Deseada</label>
                 <input type="date" id="c-date" required>
                 
                 <label style="font-size:0.9rem; font-weight:bold;">Forma de Pago</label>
                 <select id="c-payment">
                     <option value="USD (Efectivo)">USD (Efectivo)</option>
                     <option value="MN (Transferencia/Efectivo)">MN (CUP)</option>
-                    <option value="Euro">Euro</option>
+                    <option value="Euro (Efectivo)">Euro (Efectivo)</option>
                     <option value="Zelle">Zelle</option>
+                    <option value="Transferencia USD">Transferencia USD (MLC)</option>
                 </select>
 
                 <div style="background: #f0f0f0; padding: 10px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
@@ -339,7 +460,6 @@
             </form>
         </div>
     </div>
-
     <div class="modal" id="admin-product-modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -411,7 +531,6 @@
 
     <script>
         // --- 1. CONFIGURACIÓN FIREBASE ---
-        // Pega aquí TU configuración de Firebase (la misma de antes)
         const firebaseConfig = {
             apiKey: "AIzaSyA04fdbHRhwgJVQrEtDJoAm7adm99h6a_w",
             authDomain: "pinponshop-2f5c8.firebaseapp.com",
@@ -429,7 +548,7 @@
         const categoriesRef = db.collection("categories");
 
         // --- 2. VARIABLES GLOBALES ---
-        const WHATSAPP_NUMBER = "5359207040";
+        const WHATSAPP_NUMBER = "5359207040"; 
         const ADMIN_PASS = "oscardh190302";
 
         let state = {
@@ -447,7 +566,38 @@
         let tempModalQty = 1;
         let activeModalProductId = null;
 
-        // --- 3. INICIO ---
+        // --- 3. FUNCIONES DE ADMINISTRACIÓN (Movidas al inicio para evitar ReferenceError) ---
+        function promptAdminLogin() {
+            if (prompt("Contraseña:") === ADMIN_PASS) {
+                state.isAdmin = true;
+                localStorage.setItem('pinpon_admin_logged', 'true');
+                renderAll();
+                closeModal('menu-modal'); // Cerrar el menú después de loguearse
+            } else alert("Contraseña incorrecta.");
+        }
+
+        function logoutAdmin() {
+            state.isAdmin = false;
+            localStorage.removeItem('pinpon_admin_logged');
+            renderAll();
+        }
+
+        function updateSettings() {
+            configRef.update({ exchangeRate: parseFloat(document.getElementById('exchange-rate').value) })
+                     .catch(err => alert("Error al actualizar la tasa: " + err.message));
+        }
+
+        function editBanner() {
+            if(!state.isAdmin) return;
+            const t = prompt("Nuevo Título:", state.bannerTitle);
+            const s = prompt("Nuevo Subtítulo:", state.bannerSub);
+            if(t || s) configRef.update({ bannerTitle: t || state.bannerTitle, bannerSub: s || state.bannerSub })
+                                .catch(err => alert("Error al actualizar banner: " + err.message));
+        }
+
+
+        // --- 4. INICIO Y UTILS ---
+
         function init() {
             // Escuchar Configuración
             configRef.onSnapshot(doc => {
@@ -489,9 +639,7 @@
             localStorage.setItem('pinpon_ratings', JSON.stringify(state.ratings));
         }
 
-        // --- 4. UI HELPERS (CHECKBOXES) ---
         function toggleCheckStyle(checkbox) {
-            // Encuentra el contenedor padre con la clase .checkbox-container
             const container = checkbox.closest('.checkbox-container');
             if (checkbox.checked) {
                 container.classList.add('active');
@@ -501,16 +649,14 @@
         }
 
         function toggleMaintenance(checkbox) {
-            // Guardar directamente en Firestore
             configRef.update({ maintenance: checkbox.checked })
                 .catch(err => alert("Error al cambiar mantenimiento: " + err.message));
             toggleCheckStyle(checkbox);
         }
 
-        // --- 5. RENDERIZADO ---
+        // --- 5. RENDERIZADO Y FILTROS ---
         function renderAll() {
             renderBanner();
-            // renderCategories y Products son automáticos por Firestore
             updateCartIcon();
             checkMaintenance();
             renderAdminUI();
@@ -610,13 +756,16 @@
                 
                 const stockOverlay = !p.stock ? `<div class="out-of-stock-overlay">AGOTADO</div>` : '';
                 const saleBadge = isSale ? `<div style="position:absolute; top:5px; left:5px; background:var(--accent); color:white; font-size:0.7rem; font-weight:bold; padding:2px 6px; border-radius:4px;">-${percent}%</div>` : '';
-                const newBadge = p.isNew ? `<span class="p-sales" style="background: var(--secondary); color: white;">Nuevo</span>` : '';
+                const newBadge = p.isNew ? `<span class="p-sales" style="position:absolute; top:5px; right:5px; background: var(--secondary); color: white; z-index: 5;">Nuevo</span>` : '';
+
+                const currentQty = state.cart.find(item => item.id === p.id)?.qty || 1; 
 
                 card.innerHTML = `
                     ${stockOverlay}
                     <div class="img-container">
                         <img src="${p.image}" alt="${p.name}" loading="lazy">
-                        ${saleBadge} ${newBadge ? newBadge : ''}
+                        ${saleBadge}
+                        ${newBadge}
                     </div>
                     <div class="p-details">
                         <h3 class="p-title">${p.name}</h3>
@@ -628,10 +777,10 @@
                         <div class="card-controls">
                             <div class="qty-mini" onclick="event.stopPropagation()">
                                 <button class="qty-mini-btn" onclick="updateCardQty('${p.id}', -1)">-</button>
-                                <span class="qty-mini-val" id="card-qty-${p.id}">1</span>
+                                <span class="qty-mini-val" id="card-qty-${p.id}">${currentQty}</span>
                                 <button class="qty-mini-btn" onclick="updateCardQty('${p.id}', 1)">+</button>
                             </div>
-                            <div class="add-btn-mini" onclick="addFromCard('${p.id}')"><i class="fas fa-cart-plus"></i></div>
+                            ${p.stock ? `<div class="add-btn-mini" onclick="addFromCard('${p.id}')"><i class="fas fa-cart-plus"></i></div>` : ''}
                         </div>
                     </div>
                 `;
@@ -639,16 +788,14 @@
             });
         }
 
-        // --- 6. LÓGICA DE MODALES Y FORMULARIOS ---
-
+        // --- 6. LÓGICA DE PRODUCTOS Y FORMULARIOS ---
         function openProductForm() {
             document.getElementById('product-form').reset();
             document.getElementById('p-id').value = '';
             document.getElementById('p-image-preview').style.backgroundImage = 'none';
-            document.getElementById('p-img-url').value = ''; // Limpiar URL
-            document.getElementById('p-image-data').value = ''; // Limpiar data
+            document.getElementById('p-img-url').value = ''; 
+            document.getElementById('p-image-data').value = ''; 
             
-            // Reset visual checks
             const checkNew = document.getElementById('p-is-new');
             const checkStock = document.getElementById('p-stock');
             checkNew.checked = false; 
@@ -675,8 +822,10 @@
             document.getElementById('p-price').value = p.price;
             document.getElementById('p-old-price').value = p.oldPrice || '';
             document.getElementById('p-desc').value = p.desc || '';
-            document.getElementById('p-img-url').value = p.image.startsWith('data:') ? '' : p.image;
-            document.getElementById('p-image-data').value = p.image; // Guardar actual por si no cambia
+            
+            const isDataUrl = p.image.startsWith('data:');
+            document.getElementById('p-img-url').value = isDataUrl ? '' : p.image;
+            document.getElementById('p-image-data').value = p.image; 
             document.getElementById('p-image-preview').style.backgroundImage = `url('${p.image}')`;
 
             const checkNew = document.getElementById('p-is-new');
@@ -687,15 +836,13 @@
             toggleCheckStyle(checkStock);
         }
 
-        // Manejar URL de imagen
         function previewUrl(url) {
             if(url) {
                 document.getElementById('p-image-preview').style.backgroundImage = `url('${url}')`;
-                document.getElementById('p-image-data').value = url; // Guardamos la URL como data final
+                document.getElementById('p-image-data').value = url; 
             }
         }
 
-        // Manejar subida de archivo (Base64)
         function handleImageUpload(input) {
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
@@ -703,7 +850,7 @@
                     const result = e.target.result;
                     document.getElementById('p-image-data').value = result;
                     document.getElementById('p-image-preview').style.backgroundImage = `url('${result}')`;
-                    document.getElementById('p-img-url').value = ''; // Borrar URL si se sube archivo
+                    document.getElementById('p-img-url').value = ''; 
                 }
                 reader.readAsDataURL(input.files[0]);
             }
@@ -713,7 +860,6 @@
             e.preventDefault();
             const id = document.getElementById('p-id').value;
             
-            // Prioridad: 1. URL escrita, 2. Data Base64 (archivo o URL previa), 3. Placeholder
             let finalImg = document.getElementById('p-img-url').value;
             if(!finalImg) finalImg = document.getElementById('p-image-data').value;
             if(!finalImg) finalImg = "https://via.placeholder.com/400";
@@ -737,39 +883,100 @@
 
         function deleteProductFromModal() {
             if (!activeModalProductId) return;
-            if(confirm("¿Eliminar producto?")) {
+            if(confirm("¿Eliminar producto? Esta acción es irreversible.")) {
                 productsRef.doc(activeModalProductId).delete()
-                    .then(() => closeModal('product-modal'));
+                    .then(() => {
+                        closeModal('product-modal');
+                        activeModalProductId = null;
+                    })
+                    .catch(err => alert("Error al eliminar: " + err.message));
             }
         }
 
-        // --- 7. OTROS ---
-        function promptAdminLogin() {
-            if (prompt("Contraseña:") === ADMIN_PASS) {
-                state.isAdmin = true;
-                localStorage.setItem('pinpon_admin_logged', 'true');
-                renderAll();
-            } else alert("Error");
+        function openCategoryManager(open) {
+            const list = document.getElementById('category-list-admin');
+            list.innerHTML = '';
+            categoriesRef.onSnapshot(snap => {
+                list.innerHTML = ''; 
+                snap.forEach(doc => {
+                    list.innerHTML += `<div style="display:flex; justify-content:space-between; align-items:center; padding:5px 0; border-bottom: 1px dashed #eee;"><span>${doc.data().name}</span><button onclick="deleteCat('${doc.id}')" style="background:none; border:none; color:red; font-size:1.1rem; cursor:pointer;">&times;</button></div>`;
+                });
+            });
+            if(open) openModal('category-manager-modal');
+        }
+        function addCategory() {
+            const input = document.getElementById('new-category-input');
+            const val = input.value.trim();
+            if(val) {
+                categoriesRef.add({name: val})
+                    .then(() => {
+                        input.value = ''; 
+                    })
+                    .catch(err => alert("Error al agregar categoría: " + err.message));
+            }
+        }
+        function deleteCat(id) {
+            if(confirm("¿Eliminar categoría? Los productos asociados quedarán sin categoría.")) {
+                categoriesRef.doc(id).delete().then(() => {
+                }).catch(err => alert("Error al eliminar categoría: " + err.message));
+            }
         }
 
-        function logoutAdmin() {
-            state.isAdmin = false;
-            localStorage.removeItem('pinpon_admin_logged');
-            renderAll();
+        // --- 7. LÓGICA DE COMPRA Y WHATSAPP (Asegurando la funcionalidad) ---
+
+        function processOrder(e) {
+            e.preventDefault();
+            closeModal('checkout-modal'); 
+
+            const name = document.getElementById('c-name').value;
+            const ci = document.getElementById('c-ci').value;
+            const address = document.getElementById('c-address').value;
+            const phone = document.getElementById('c-phone').value;
+            const date = document.getElementById('c-date').value;
+            const payment = document.getElementById('c-payment').value;
+            
+            const totalUSD = state.cart.reduce((s, i) => {
+                const p = state.products.find(x => x.id === i.id);
+                return s + (p ? p.price * i.qty : 0);
+            }, 0).toFixed(2);
+            const totalMN = (parseFloat(totalUSD) * state.exchangeRate).toFixed(0);
+
+            // Generar la lista de productos
+            let productList = state.cart.map(i => {
+                const p = state.products.find(x => x.id === i.id);
+                if (!p) return null;
+                return `* ${p.name} (${i.qty} und.) - $${(p.price * i.qty).toFixed(2)} USD`;
+            }).filter(item => item !== null).join('\n');
+
+
+            // 1. Crear el mensaje estructurado de WhatsApp
+            let message = `¡Hola! 👋 Quiero hacer un pedido en PIN-PON SHOP.\n\n`;
+            message += `*🛒 Resumen del Pedido:*\n${productList}\n`;
+            message += `\n*💰 Total a Pagar:* $${totalUSD} USD / ${totalMN} MN (Aprox.)\n`;
+            message += `\n*📦 Datos de Envío:*\n`;
+            message += `*Nombre:* ${name}\n`;
+            message += `*C.I.:* ${ci}\n`;
+            message += `*Teléfono:* ${phone}\n`;
+            message += `*Dirección:* ${address}\n`;
+            message += `\n*📅 Entrega:* ${date}\n`;
+            message += `*💳 Forma de Pago:* ${payment}\n\n`;
+            message += `_Por favor, confirma mi pedido y coordina la entrega._ ¡Gracias!`;
+
+            const encodedMessage = encodeURIComponent(message);
+            
+            // 2. Redirigir a WhatsApp
+            window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodedMessage}`, '_blank');
+
+            // 3. Vaciar carrito 
+            state.cart = [];
+            saveDataLocal();
+            updateCartIcon();
+            
+            alert("Pedido enviado. Por favor, finaliza el envío del mensaje en WhatsApp.");
         }
 
-        function updateSettings() {
-            configRef.update({ exchangeRate: parseFloat(document.getElementById('exchange-rate').value) });
-        }
+        // --- 8. LÓGICA DE CARRITO Y MODALES ---
 
-        function editBanner() {
-            if(!state.isAdmin) return;
-            const t = prompt("Nuevo Título:", state.bannerTitle);
-            const s = prompt("Nuevo Subtítulo:", state.bannerSub);
-            if(t || s) configRef.update({ bannerTitle: t || state.bannerTitle, bannerSub: s || state.bannerSub });
-        }
-
-        // --- 8. HELPERS CARRITO Y MODALES ---
         function updateCardQty(id, change) {
             const el = document.getElementById(`card-qty-${id}`);
             let val = parseInt(el.innerText) + change;
@@ -777,68 +984,148 @@
             el.innerText = val;
         }
         function addFromCard(id) {
-            addToCart(id, parseInt(document.getElementById(`card-qty-${id}`).innerText));
+            const p = state.products.find(x => x.id === id);
+            if (!p || !p.stock) return;
+            const el = document.getElementById(`card-qty-${id}`);
+            const qty = parseInt(el.innerText);
+            addToCart(id, qty);
+            el.innerText = 1; // Resetear cantidad en tarjeta a 1 después de añadir
         }
         function addToCart(id, qty) {
             const p = state.products.find(x => x.id === id);
-            if (!p) return;
+            if (!p || !p.stock) return;
+            
             const exist = state.cart.find(x => x.id === id);
+            
             if(exist) exist.qty += qty;
             else state.cart.push({ id: id, qty: qty });
+            
             saveDataLocal();
             updateCartIcon();
-            // Animación
             const badge = document.getElementById('cart-count');
             badge.style.transform = "scale(1.5)";
             setTimeout(() => badge.style.transform = "scale(1)", 200);
         }
+
         function updateCartIcon() {
             document.getElementById('cart-count').innerText = state.cart.reduce((s, i) => s + i.qty, 0);
         }
+
         function openProductModal(id) {
             activeModalProductId = id;
             const p = state.products.find(x => x.id === id);
+            if (!p) return;
+            
+            const isSale = p.oldPrice && p.oldPrice > p.price;
+            const mn = (p.price * state.exchangeRate).toFixed(0);
+            
+            // 1. Rellenar detalles
             document.getElementById('modal-img').src = p.image;
             document.getElementById('modal-title').innerText = p.name;
             document.getElementById('modal-desc').innerText = p.desc;
-            document.getElementById('modal-price').innerText = `$${p.price}`;
-            const mn = (p.price * state.exchangeRate).toFixed(0);
+            document.getElementById('modal-price').innerText = `$${p.price.toFixed(2)} USD`;
             document.getElementById('modal-mn-price').innerText = `(${mn} MN)`;
+            document.getElementById('modal-old-price').innerText = isSale ? `$${p.oldPrice.toFixed(2)}` : '';
+            
+            // 2. Controlar Stock y Botones
+            if (p.stock) {
+                document.getElementById('modal-stock-overlay').style.display = 'none';
+                document.getElementById('modal-action-controls').style.display = 'flex';
+                document.getElementById('modal-out-of-stock-message').style.display = 'none';
+                tempModalQty = 1; 
+                document.getElementById('modal-qty-display').innerText = tempModalQty;
+            } else {
+                document.getElementById('modal-stock-overlay').style.display = 'flex';
+                document.getElementById('modal-action-controls').style.display = 'none';
+                document.getElementById('modal-out-of-stock-message').style.display = 'block';
+            }
+            
+            // 3. Opciones de Administrador
             document.getElementById('admin-product-actions').style.display = state.isAdmin ? 'flex' : 'none';
+            
+            // 4. Mostrar modal
             openModal('product-modal');
         }
-        function openCategoryManager(open) {
-            const list = document.getElementById('category-list-admin');
-            list.innerHTML = '';
-            categoriesRef.get().then(snap => {
-                snap.forEach(doc => {
-                    list.innerHTML += `<div style="display:flex; justify-content:space-between; padding:5px;"><span>${doc.data().name}</span><button onclick="deleteCat('${doc.id}')" style="color:red;border:none;">X</button></div>`;
-                });
+
+        function updateModalQty(change) {
+            tempModalQty += change;
+            if (tempModalQty < 1) tempModalQty = 1;
+            document.getElementById('modal-qty-display').innerText = tempModalQty;
+        }
+
+        function addToCartFromModal() {
+            if (!activeModalProductId) return;
+            addToCart(activeModalProductId, tempModalQty);
+            closeModal('product-modal');
+        }
+
+        function rateProduct(rating) {
+            const stars = document.getElementById('modal-rating-container').querySelectorAll('i');
+            stars.forEach((star, index) => {
+                if (index < rating) {
+                    star.classList.remove('far');
+                    star.classList.add('fas');
+                } else {
+                    star.classList.remove('fas');
+                    star.classList.add('far');
+                }
             });
-            if(open) openModal('category-manager-modal');
+            state.ratings[activeModalProductId] = rating;
+            saveDataLocal();
         }
-        function addCategory() {
-            const val = document.getElementById('new-category-input').value;
-            if(val) categoriesRef.add({name: val}).then(() => openCategoryManager(false));
-        }
-        function deleteCat(id) {
-            if(confirm("Borrar?")) categoriesRef.doc(id).delete().then(() => openCategoryManager(false));
-        }
-        // Helper Modales
+
         function openCart() { 
-            const c = document.getElementById('cart-items'); c.innerHTML=''; 
+            const c = document.getElementById('cart-items'); 
+            c.innerHTML=''; 
             let total=0;
+            if (state.cart.length === 0) {
+                c.innerHTML = `<div style="text-align:center; padding:30px; color:#999;">Tu carrito está vacío. ¡Añade productos!</div>`;
+                document.getElementById('cart-total').innerText = `$0.00 USD`;
+                openModal('cart-modal');
+                return;
+            }
+            
             state.cart.forEach((i, idx) => {
                 const p = state.products.find(x=>x.id===i.id);
                 if(p) {
-                    total+=p.price*i.qty;
-                    c.innerHTML += `<div style="display:flex; justify-content:space-between; margin-bottom:10px;"><span>${p.name} (${i.qty})</span><span>$${p.price*i.qty}</span><button onclick="removeCart(${idx})" style="color:red;border:none;">X</button></div>`;
+                    const subtotal = p.price * i.qty;
+                    total+=subtotal;
+                    c.innerHTML += `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid #eee; padding-bottom:10px;">
+                                        <span style="flex:1; font-weight:500;">${p.name} <br><small style="color:#777;">(${i.qty} x $${p.price.toFixed(2)})</small></span>
+                                        <span style="font-weight:700;">$${subtotal.toFixed(2)} USD</span>
+                                        <button onclick="removeCart(${idx})" style="background:none; border:none; color:red; margin-left:10px; font-size:1.1rem; cursor:pointer;">&times;</button>
+                                    </div>`;
                 }
             });
-            document.getElementById('cart-total').innerText = `$${total} USD`;
+            document.getElementById('cart-total').innerText = `$${total.toFixed(2)} USD`;
             openModal('cart-modal'); 
         }
-        function removeCart(idx){ state.cart.splice(idx,1); saveDataLocal(); openCart(); updateCartIcon(); }
+
+        function removeCart(idx){ 
+            state.cart.splice(idx,1); 
+            saveDataLocal(); 
+            openCart(); 
+            updateCartIcon(); 
+        }
+        
+        function openCheckout() {
+            const total = state.cart.reduce((s, i) => {
+                const p = state.products.find(x => x.id === i.id);
+                return s + (p ? p.price * i.qty : 0);
+            }, 0).toFixed(2);
+            const totalMN = (parseFloat(total) * state.exchangeRate).toFixed(0);
+
+            document.getElementById('checkout-total-display').innerText = `$${total} USD / ${totalMN} MN (Aprox.)`;
+
+            // Establecer la fecha mínima en el input de fecha
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('c-date').setAttribute('min', today);
+            
+            closeModal('cart-modal');
+            openModal('checkout-modal');
+        }
+
+        // --- 9. HELPERS MODALES SIMPLES ---
         function openMenu() { openModal('menu-modal'); }
         function openModal(id) { document.getElementById(id).classList.add('open'); }
         function closeModal(id) { document.getElementById(id).classList.remove('open'); }
